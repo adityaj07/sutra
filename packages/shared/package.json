@@ -13,6 +13,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@hono/zod-openapi": "^1.5.2",
     "@hono/zod-validator": "^0.4.1",
     "@sutra/config": "*",
     "hono": "^4.10.3",
