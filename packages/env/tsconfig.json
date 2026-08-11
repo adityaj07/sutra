@@ -1,0 +1,3 @@
+{
+  "extends": "@sutra/config/tsconfig.base.json"
+}
