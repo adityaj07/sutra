@@ -31,7 +31,9 @@ export default function TabLayout() {
         name="two"
         options={{
           title: "Explore",
-          tabBarIcon: ({ color }) => <TabBarIcon name="compass" color={color} />,
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="compass" color={color} />
+          ),
         }}
       />
     </Tabs>

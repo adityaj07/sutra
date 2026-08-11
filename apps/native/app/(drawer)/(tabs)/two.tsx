@@ -15,10 +15,19 @@ export default function TabTwo() {
         <View style={styles.content}>
           <Host matchContents={{ vertical: true }}>
             <Column spacing={8}>
-              <ExpoUIText textStyle={{ color: theme.text, fontSize: 24, fontWeight: "bold" }}>
+              <ExpoUIText
+                textStyle={{
+                  color: theme.text,
+                  fontSize: 24,
+                  fontWeight: "bold",
+                }}
+              >
                 Tab Two
               </ExpoUIText>
-              <ExpoUIText textStyle={{ color: theme.text, fontSize: 16 }} style={{ opacity: 0.7 }}>
+              <ExpoUIText
+                textStyle={{ color: theme.text, fontSize: 16 }}
+                style={{ opacity: 0.7 }}
+              >
                 Discover more features and content
               </ExpoUIText>
             </Column>

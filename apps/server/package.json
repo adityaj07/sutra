@@ -4,6 +4,7 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsdown",
+    "lint": "eslint .",
     "check-types": "tsc -b",
     "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
     "dev": "bun run --hot src/index.ts",
@@ -12,6 +13,7 @@
   "dependencies": {
     "@sutra/db": "workspace:*",
     "@sutra/env": "workspace:*",
+    "@sutra/shared": "workspace:*",
     "dotenv": "catalog:",
     "hono": "^4.12.32",
     "zod": "catalog:"

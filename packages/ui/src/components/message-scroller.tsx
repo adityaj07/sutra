@@ -9,7 +9,7 @@ import {
 import { Button } from "@sutra/ui/components/button";
 import { cn } from "@sutra/ui/lib/utils";
 import { ArrowDownIcon } from "lucide-react";
-import * as React from "react";
+import type * as React from "react";
 
 function MessageScrollerProvider(
   props: React.ComponentProps<typeof MessageScrollerPrimitive.Provider>,
@@ -56,7 +56,10 @@ function MessageScrollerContent({
   return (
     <MessageScrollerPrimitive.Content
       data-slot="message-scroller-content"
-      className={cn("cn-message-scroller-content flex h-max min-h-full flex-col gap-6", className)}
+      className={cn(
+        "cn-message-scroller-content flex h-max min-h-full flex-col gap-6",
+        className,
+      )}
       {...props}
     />
   );

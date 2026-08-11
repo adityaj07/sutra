@@ -1,4 +1,4 @@
-import { Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { Host, Text as ExpoUIText } from "@expo/ui";
 import { View, ScrollView, StyleSheet } from "react-native";
 
 import { Container } from "@/components/container";
@@ -11,7 +11,10 @@ export default function Home() {
 
   return (
     <Container>
-      <ScrollView style={styles.scrollView} contentInsetAdjustmentBehavior="never">
+      <ScrollView
+        style={styles.scrollView}
+        contentInsetAdjustmentBehavior="never"
+      >
         <View style={styles.content}>
           <Host style={styles.titleHost}>
             <ExpoUIText
@@ -27,7 +30,10 @@ export default function Home() {
           </Host>
 
           <View
-            style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}
+            style={[
+              styles.card,
+              { backgroundColor: theme.card, borderColor: theme.border },
+            ]}
           ></View>
         </View>
       </ScrollView>

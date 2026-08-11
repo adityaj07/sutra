@@ -22,6 +22,10 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "check-types": "turbo run check-types",
     "dev:native": "turbo run dev -F native",
     "dev:web": "turbo run dev -F web",
@@ -41,12 +45,14 @@
   },
   "dependencies": {
     "@sutra/env": "workspace:*",
+    "@sutra/shared": "workspace:*",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@sutra/config": "workspace:*",
     "@types/bun": "catalog:",
+    "prettier": "^3.7.4",
     "turbo": "^2.10.7",
     "typescript": "^6.0.3"
   },

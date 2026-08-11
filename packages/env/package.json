@@ -14,6 +14,9 @@
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
+  "scripts": {
+    "lint": "eslint ."
+  },
   "devDependencies": {
     "@sutra/config": "workspace:*",
     "@types/bun": "catalog:",

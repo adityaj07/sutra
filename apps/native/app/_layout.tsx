@@ -1,5 +1,9 @@
 import { Stack } from "expo-router";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "expo-router/react-navigation";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -36,7 +40,10 @@ export default function RootLayout() {
         <GestureHandlerRootView style={styles.container}>
           <Stack>
             <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ title: "Modal", presentation: "modal" }} />
+            <Stack.Screen
+              name="modal"
+              options={{ title: "Modal", presentation: "modal" }}
+            />
           </Stack>
         </GestureHandlerRootView>
       </ThemeProvider>

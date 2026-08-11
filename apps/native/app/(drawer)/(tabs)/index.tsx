@@ -15,10 +15,19 @@ export default function TabOne() {
         <View style={styles.content}>
           <Host matchContents={{ vertical: true }}>
             <Column spacing={8}>
-              <ExpoUIText textStyle={{ color: theme.text, fontSize: 24, fontWeight: "bold" }}>
+              <ExpoUIText
+                textStyle={{
+                  color: theme.text,
+                  fontSize: 24,
+                  fontWeight: "bold",
+                }}
+              >
                 Tab One
               </ExpoUIText>
-              <ExpoUIText textStyle={{ color: theme.text, fontSize: 16 }} style={{ opacity: 0.7 }}>
+              <ExpoUIText
+                textStyle={{ color: theme.text, fontSize: 16 }}
+                style={{ opacity: 0.7 }}
+              >
                 Explore the first section of your app
               </ExpoUIText>
             </Column>
