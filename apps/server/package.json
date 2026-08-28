@@ -1,5 +1,6 @@
 {
   "name": "server",
+  "version": "1.0.0",
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
@@ -11,6 +12,9 @@
     "start": "bun run dist/index.mjs"
   },
   "dependencies": {
+    "@hono/node-server": "^2.1.0",
+    "@hono/zod-openapi": "^1.5.2",
+    "@hono/zod-validator": "^0.9.0",
     "@sutra/db": "workspace:*",
     "@sutra/env": "workspace:*",
     "@sutra/shared": "workspace:*",

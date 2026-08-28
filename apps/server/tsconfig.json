@@ -8,5 +8,11 @@
     },
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx"
-  }
+  },
+  "include": [
+    "src/**/*",
+    "drizzle.config.ts",
+    "../../packages/shared/src/create-app.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
 }

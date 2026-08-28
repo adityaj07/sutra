@@ -1,10 +1,15 @@
-import { env } from "@sutra/env/server";
-import { drizzle } from "drizzle-orm/node-postgres";
+// Export connection utilities
+export {
+  db,
+  connectDB,
+  closeDB,
+  initializeDB,
+  type DBTransaction,
+} from "./connection";
 
-import * as schema from "./schema";
+// Export schemas
+export * from "./schema";
 
-export function createDb() {
-  return drizzle(env.DATABASE_URL, { schema });
-}
-
-export const db = createDb();
+// Export services
+export { UsersService } from "./services/users.service";
+// export { SessionService } from "./services/session.service";
