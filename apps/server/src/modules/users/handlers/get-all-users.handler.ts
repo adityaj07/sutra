@@ -1,0 +1,130 @@
+import { enforceRoleMiddleware } from "@/middlewares/enforce-role.middleware";
+import { enforceUserMiddleware } from "@/middlewares/enforce-user.middleware";
+import type { AppRouteHandler } from "@/types";
+import { createRoute, z } from "@hono/zod-openapi";
+import { StatusCodes } from "@sutra/config";
+import { UserRole, UsersService } from "@sutra/db";
+import { errorResponseSchemas, logger } from "@sutra/shared";
+import { HTTPException } from "hono/http-exception";
+
+export const getAllUsersRoute = createRoute({
+  method: "get",
+  middleware: [enforceUserMiddleware, enforceRoleMiddleware(UserRole.ADMIN)],
+  path: "/v1/users",
+  tags: ["Users"],
+  summary: "Get all users",
+  description: "Retrieves a list of all users in the system",
+  request: {
+    query: z.object({
+      page: z.coerce
+        .number()
+        .optional()
+        .default(1)
+        .openapi({
+          example: 1,
+          description: "Page number",
+          param: { in: "query", name: "page" },
+        }),
+      limit: z.coerce
+        .number()
+        .optional()
+        .default(10)
+        .openapi({
+          example: 10,
+          description: "Number of users per page",
+          param: { in: "query", name: "limit" },
+        }),
+    }),
+  },
+  responses: {
+    200: {
+      description: "Successfully retrieved the list of users",
+      content: {
+        "application/json": {
+          schema: z.object({
+            message: z
+              .string()
+              .openapi({ example: "Users retrieved successfully" }),
+            payload: z.object({
+              users: z.array(
+                z.object({
+                  id: z.string().openapi({
+                    example: "123e4567-e89b-12d3-a456-426614174000",
+                  }),
+                  email: z.email().openapi({ example: "user@example.com" }),
+                  firstName: z.string().openapi({ example: "John" }),
+                  lastName: z.string().nullable().openapi({ example: "Doe" }),
+                  role: z.enum(UserRole).openapi({ example: UserRole.USER }),
+                  avatar: z
+                    .string()
+                    .nullable()
+                    .openapi({ example: "https://example.com/avatar.png" }),
+                }),
+              ),
+              pagination: z.object({
+                page: z
+                  .number()
+                  .openapi({ example: 1, description: "Page number" }),
+                limit: z.number().openapi({
+                  example: 10,
+                  description: "Number of users per page",
+                }),
+                total: z.number().openapi({
+                  example: 100,
+                  description: "Total number of users",
+                }),
+                totalPages: z.number().openapi({
+                  example: 10,
+                  description: "Total number of pages",
+                }),
+              }),
+            }),
+          }),
+        },
+      },
+    },
+    ...errorResponseSchemas,
+  },
+});
+
+export type GetAllUsersRoute = typeof getAllUsersRoute;
+
+export const getAllUsersHandler: AppRouteHandler<GetAllUsersRoute> = async (
+  c,
+) => {
+  const { page, limit } = c.req.valid("query");
+
+  try {
+    const { users, pagination } = await UsersService.findAll({ page, limit });
+
+    return c.json({
+      message: "Users retrieved successfully",
+      payload: {
+        users,
+        pagination: {
+          page,
+          limit,
+          total: pagination.total,
+          totalPages: pagination.totalPages,
+        },
+      },
+    });
+  } catch (err) {
+    if (err instanceof HTTPException) {
+      throw err;
+    }
+
+    logger.error("Error getting all users", {
+      module: "users",
+      action: "getAllUsersHandler",
+      error: err,
+    });
+
+    throw new HTTPException(StatusCodes.HTTP_500_INTERNAL_SERVER_ERROR, {
+      res: c.json(
+        { message: "Internal Server Error" },
+        StatusCodes.HTTP_500_INTERNAL_SERVER_ERROR,
+      ),
+    });
+  }
+};

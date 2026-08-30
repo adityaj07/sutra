@@ -12,6 +12,9 @@ import type { AppBindings, AppRouteHandler } from "./types";
 import { secureHeaders } from "hono/secure-headers";
 import { createRoute, z } from "@hono/zod-openapi";
 import { serve, type ServerType } from "@hono/node-server";
+import { getUserMiddleware } from "./middlewares/get-user.middleware";
+import authRoutes from "./modules/auth/auth.routes";
+import { userRoutes } from "./modules/users/user.routes";
 
 // Initialize db with config
 initializeDB({
@@ -50,7 +53,7 @@ app.use(requestLogger());
 
 app.use(globalRateLimiter);
 
-// app.use(getUserMiddleware);
+app.use(getUserMiddleware);
 
 const getHealthRoute = createRoute({
   method: "get",
@@ -84,11 +87,11 @@ const healthHandler: AppRouteHandler<GetHealthRoute> = (c) => {
 
 app.openapi(getHealthRoute, healthHandler);
 
-// const routes = [authroutes, userRouter] as const;
+const routes = [authRoutes, userRoutes] as const;
 
-// routes.forEach((route) => {
-//   app.route("/", route);
-// });
+routes.forEach((route) => {
+  app.route("/", route);
+});
 
 configureOpenAPI(app, {
   title: "Sutra API",
