@@ -1,5 +1,5 @@
 import { SessionStatus, type DBTransaction } from "@sutra/db";
-import { SessionService } from "@sutra/db/services/session.service";
+import { SessionService } from "@sutra/db";
 import { env } from "@sutra/env/server";
 import { decrypt, encrypt, logger } from "@sutra/shared";
 import { oauthProviderFactory } from "../providers";

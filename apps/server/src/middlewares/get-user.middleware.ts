@@ -1,7 +1,7 @@
 import type { AppBindings } from "@/types";
 import { StatusCodes } from "@sutra/config";
 import { UsersService } from "@sutra/db";
-import { SessionService } from "@sutra/db/services/session.service";
+import { SessionService } from "@sutra/db";
 import { env } from "@sutra/env/server";
 import { logger, verifyJwt } from "@sutra/shared";
 import type { MiddlewareHandler } from "hono";

@@ -6,7 +6,7 @@ import { errorHandler, notFoundHandler } from "./error-handler";
 
 export function createRouter<E extends Env = Env>() {
   return new OpenAPIHono<E>({
-    strict: false,
+    strict: false, // we treat "/hello" and "/hello/" equal
     defaultHook: (result, c) => {
       if (!result.success) {
         const errors: Record<string, string> = {};

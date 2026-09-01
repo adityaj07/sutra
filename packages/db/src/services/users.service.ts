@@ -22,7 +22,7 @@ export namespace UsersService {
       const result = await queryClient
         .insert(usersTable)
         .values(payload)
-        .returning();
+        .returning(); // to get the inserted row back
 
       const [createdUser] = result;
 

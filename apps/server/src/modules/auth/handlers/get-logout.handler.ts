@@ -3,7 +3,7 @@ import type { AppRouteHandler } from "@/types";
 import { createRoute, z } from "@hono/zod-openapi";
 import { StatusCodes } from "@sutra/config";
 import { SessionStatus } from "@sutra/db";
-import { SessionService } from "@sutra/db/services/session.service";
+import { SessionService } from "@sutra/db";
 import { errorResponseSchemas, logger } from "@sutra/shared";
 import { deleteCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
