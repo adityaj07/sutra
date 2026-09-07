@@ -49,8 +49,8 @@ export const getLogoutHandler: AppRouteHandler<GetLogoutRoute> = async (c) => {
       status: SessionStatus.REVOKED,
     });
 
-    deleteCookie(c, "accessToken");
-    deleteCookie(c, "refreshToken");
+    deleteCookie(c, "access_token");
+    deleteCookie(c, "refresh_token");
 
     logger.audit("User logged out", {
       module: "auth",

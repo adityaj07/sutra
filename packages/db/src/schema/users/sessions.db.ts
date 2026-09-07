@@ -11,6 +11,7 @@ import {
 import { usersSchema } from ".";
 import { usersTable } from "./users.db";
 import { relations } from "drizzle-orm";
+import { accountsTable } from "./accounts.db";
 
 export interface SessionMetadata {
   ipAddress?: string;
@@ -20,22 +21,12 @@ export interface SessionMetadata {
   browser?: string;
 }
 
-export enum SessionProvider {
-  GOOGLE = "google",
-  APPLE = "apple",
-  GITHUB = "github",
-}
-
 export enum SessionStatus {
   ACTIVE = "active",
   REVOKED = "revoked",
   EXPIRED = "expired",
 }
 
-export const sessionProviderEnum = pgEnum(
-  "session_provider",
-  enumToPgEnum(SessionProvider),
-);
 export const sessionStatusEnum = pgEnum(
   "session_status",
   enumToPgEnum(SessionStatus),
@@ -47,32 +38,16 @@ export const sessionsTable = usersSchema.table(
     id: uuid("id").notNull().primaryKey().defaultRandom(),
     userId: uuid("user_id")
       .notNull()
-      .references(() => usersTable.id),
+      .references(() => usersTable.id, {
+        onDelete: "cascade",
+      }),
     status: sessionStatusEnum("status").notNull(),
 
-    provider: sessionProviderEnum("provider").notNull(),
-    providerScope: text("provider_scope").notNull(),
-    providerAccountId: text("provider_account_id").notNull(),
-
-    providerAccessToken: text("provider_access_token").notNull(),
-    providerAccessTokenIv: text("provider_access_token_iv").notNull(),
-    providerAccessTokenTag: text("provider_access_token_tag").notNull(),
-    providerAccessTokenExpiresAt: timestamp(
-      "provider_access_token_expires_at",
-      {
-        withTimezone: true,
-      },
-    ).notNull(),
-
-    providerRefreshToken: text("provider_refresh_token").notNull(),
-    providerRefreshTokenIv: text("provider_refresh_token_iv").notNull(),
-    providerRefreshTokenTag: text("provider_refresh_token_tag").notNull(),
-    providerRefreshTokenExpiresAt: timestamp(
-      "provider_refresh_token_expires_at",
-      {
-        withTimezone: true,
-      },
-    ).notNull(),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accountsTable.id, {
+        onDelete: "cascade",
+      }),
 
     lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true })
       .defaultNow()
@@ -88,16 +63,11 @@ export const sessionsTable = usersSchema.table(
     metadata: jsonb("metadata").$type<SessionMetadata>().default({}),
   },
   (table) => [
-    uniqueIndex("sessions_provider_refresh_token_idx").on(
-      table.providerRefreshToken,
-    ),
-    index("sessions_provider_account_id_idx").on(table.providerAccountId),
     index("sessions_user_id_idx").on(table.userId),
     index("sessions_status_idx").on(table.status),
     index("sessions_last_accessed_at_idx").on(table.lastAccessedAt),
     index("sessions_revoked_at_idx").on(table.revokedAt),
     index("sessions_expires_at_idx").on(table.expiresAt),
-    index("sessions_provider_idx").on(table.provider),
   ],
 );
 
@@ -105,6 +75,11 @@ export const sessionsRelations = relations(sessionsTable, ({ one }) => ({
   user: one(usersTable, {
     fields: [sessionsTable.userId],
     references: [usersTable.id],
+  }),
+
+  account: one(accountsTable, {
+    fields: [sessionsTable.accountId],
+    references: [accountsTable.id],
   }),
 }));
 

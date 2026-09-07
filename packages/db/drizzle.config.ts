@@ -5,6 +5,11 @@ dotenv.config({
   path: "../../apps/server/.env",
 });
 
+dotenv.config({
+  path: "../../apps/server/.env.local",
+  override: true,
+});
+
 export default defineConfig({
   schema: "./src/schema",
   out: "./src/migrations",

@@ -5,16 +5,24 @@ export {
   type UpdateUser,
   type User,
   UserRole,
+  userRoleEnum,
 } from "./users/users.db";
 export {
   type SessionMetadata,
   type Session,
   type NewSession,
   type UpdateSession,
-  SessionProvider,
   SessionStatus,
-  sessionProviderEnum,
   sessionStatusEnum,
   sessionsRelations,
   sessionsTable,
 } from "./users/sessions.db";
+export {
+  AccountProvider,
+  accountProviderEnum,
+  accountsTable,
+  accountsRelations,
+  type Account,
+  type NewAccount,
+  type UpdateAccount,
+} from "./users/accounts.db";
