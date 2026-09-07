@@ -66,6 +66,9 @@ export const accountsTable = usersSchema.table(
     })
       .defaultNow()
       .notNull(),
+    deletedAt: timestamp("deleted_at", {
+      withTimezone: true,
+    }),
   },
   (table) => [
     unique("accounts_provider_provider_account_id_unique").on(

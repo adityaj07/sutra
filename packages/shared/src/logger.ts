@@ -2,7 +2,14 @@ import { env } from "@sutra/env/server";
 import pino, { type TransportTargetOptions } from "pino";
 
 type LoggerModules =
-  "db" | "auth" | "users" | "system" | "session" | "security" | "http";
+  | "db"
+  | "auth"
+  | "users"
+  | "system"
+  | "session"
+  | "security"
+  | "http"
+  | "accounts";
 
 interface LoggerMeta {
   module: LoggerModules;
