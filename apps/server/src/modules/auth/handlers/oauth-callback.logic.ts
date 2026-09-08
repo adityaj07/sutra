@@ -1,5 +1,5 @@
 import type { AppBindings } from "@/types";
-import type { SessionProvider } from "@sutra/db";
+import type { AccountProvider } from "@sutra/db";
 import { env } from "@sutra/env/server";
 import type { Context } from "hono";
 import { oauthProviderFactory } from "../providers";
@@ -14,7 +14,7 @@ function getApiOrigin(): string {
 }
 
 export interface OauthCallbackParams {
-  provider: SessionProvider;
+  provider: AccountProvider;
   code?: string;
   state?: string;
   error?: string;
@@ -130,7 +130,6 @@ export async function processOauthCallback(
       provider,
       userId: authUser?.id,
       email: authUser?.email,
-      providerAccountId: authUser?.providerAccountId,
       sessionId: session?.id,
     });
 

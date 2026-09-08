@@ -1,6 +1,6 @@
 import type { AppRouteHandler } from "@/types";
 import { createRoute, z } from "@hono/zod-openapi";
-import { SessionProvider } from "@sutra/db";
+import { AccountProvider } from "@sutra/db";
 import {
   errorResponseSchemas,
   generateStateToken,
@@ -22,12 +22,12 @@ export const getOAuthProviderRoute = createRoute({
   request: {
     params: z.object({
       provider: z
-        .nativeEnum(SessionProvider, {
+        .nativeEnum(AccountProvider, {
           message: "Invalid OAuth provider",
         })
         .openapi({
           description: "The OAuth provider to use (e.g., google, github)",
-          example: SessionProvider.GOOGLE,
+          example: AccountProvider.GOOGLE,
           param: {
             in: "path",
             name: "provider",

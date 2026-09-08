@@ -1,6 +1,7 @@
 import {
+  AccountsService,
   db,
-  SessionProvider,
+  AccountProvider,
   SessionStatus,
   UsersService,
   type DBTransaction,
@@ -116,36 +117,56 @@ function resolveOAuthNameFields(
 
 // Execute OAuth callback txn logic
 async function executeOAuthCallbackTransaction(
-  provider: SessionProvider,
+  provider: AccountProvider,
   tokenResponse: {
     access_token: string;
     refresh_token: string;
     expires_in?: number;
+    refresh_token_expires_in?: number;
     scope?: string;
   },
   userInfo: OAuthUserInfoPayload,
   oauthProvider: OAuthProvider,
   tx: DBTransaction,
 ): Promise<OAuthCallbackResult> {
-  const existingUser = await UsersService.findByProviderAccountId(userInfo.id, {
-    tx,
-  });
+  const existingAccount = await AccountsService.findByProviderAccountId(
+    provider,
+    userInfo.id,
+    { tx },
+  );
+
+  const existingUser = existingAccount
+    ? await UsersService.findById(existingAccount.userId, { tx })
+    : await UsersService.findByEmail(userInfo.email, { tx });
+
   const { firstName, lastName } = resolveOAuthNameFields(
     userInfo,
     existingUser,
   );
 
-  // Create or update user
-  const user = await UsersService.upsertByProviderAccountId(
-    {
-      email: userInfo.email,
-      firstName,
-      lastName,
-      avatar: userInfo.picture || null,
-      providerAccountId: userInfo.id,
-    },
-    { tx },
-  );
+  let user = existingUser;
+
+  if (user) {
+    user = await UsersService.updateById(
+      user.id,
+      {
+        firstName,
+        lastName,
+        avatar: userInfo.picture || null,
+      },
+      { tx },
+    );
+  } else {
+    user = await UsersService.create(
+      {
+        email: userInfo.email,
+        firstName,
+        lastName,
+        avatar: userInfo.picture || null,
+      },
+      { tx },
+    );
+  }
 
   if (!user) {
     throw new Error("Failed to upsert user during OAuth callback");
@@ -169,29 +190,45 @@ async function executeOAuthCallbackTransaction(
   const accessTokenExpiresAt = new Date(
     Date.now() + accessTokenExpiresIn * 1000,
   );
-  const refreshTokenExpiresIn = 90 * 24 * 60 * 60; // 90 days
+  const refreshTokenExpiresIn =
+    tokenResponse.refresh_token_expires_in ?? 90 * 24 * 60 * 60;
+
   const refreshTokenExpiresAt = new Date(
     Date.now() + refreshTokenExpiresIn * 1000,
   );
   const sessionExpiresAt = new Date(Date.now() + refreshTokenExpiresIn * 1000); // 90 days
 
-  // Create session with tokens
+  const accountPayload = {
+    userId: user.id,
+    provider,
+    providerAccountId: userInfo.id,
+    providerScope:
+      tokenResponse.scope || oauthProvider.getDefaultScopes().join(" "),
+    providerAccessToken: encryptedAccessToken,
+    providerAccessTokenIv: accessTokenIv,
+    providerAccessTokenTag: accessTokenTag,
+    providerAccessTokenExpiresAt: accessTokenExpiresAt,
+    providerRefreshToken: encryptedRefreshToken,
+    providerRefreshTokenIv: refreshTokenIv,
+    providerRefreshTokenTag: refreshTokenTag,
+    providerRefreshTokenExpiresAt: refreshTokenExpiresAt,
+  };
+
+  const account = existingAccount
+    ? await AccountsService.updateById(existingAccount.id, accountPayload, {
+        tx,
+      })
+    : await AccountsService.create(accountPayload, { tx });
+
+  if (!account) {
+    throw new Error("Failed to create or update account during OAuth callback");
+  }
+
   const session = await SessionService.create(
     {
       userId: user.id,
+      accountId: account.id,
       status: SessionStatus.ACTIVE,
-      provider,
-      providerAccessToken: encryptedAccessToken,
-      providerAccessTokenIv: accessTokenIv,
-      providerAccessTokenTag: accessTokenTag,
-      providerAccessTokenExpiresAt: accessTokenExpiresAt,
-      providerRefreshToken: encryptedRefreshToken,
-      providerRefreshTokenIv: refreshTokenIv,
-      providerRefreshTokenTag: refreshTokenTag,
-      providerScope:
-        tokenResponse.scope || oauthProvider.getDefaultScopes().join(" "),
-      providerRefreshTokenExpiresAt: refreshTokenExpiresAt,
-      providerAccountId: user.providerAccountId,
       expiresAt: sessionExpiresAt,
       lastAccessedAt: new Date(),
       metadata: {},
@@ -205,13 +242,13 @@ async function executeOAuthCallbackTransaction(
 export namespace OAuthService {
   /**
    * Handle OAuth callback flow
-   * @param provider - The OAuth provider (e.g., SessionProvider.GOOGLE)
+   * @param provider - The OAuth provider (e.g., AccountProvider.GOOGLE)
    * @param code - Authorization code from OAuth provider
    * @param options - Optional database transaction
    * @returns User and session created/updated
    */
   export async function handleCallback(
-    provider: SessionProvider,
+    provider: AccountProvider,
     code: string,
     options?: {
       tx?: DBTransaction;
@@ -264,10 +301,15 @@ export namespace OAuthService {
       const runCallback = async (tx: DBTransaction) => {
         // apple (and similar providers) may omit email on repeated sign-ins
         if (!userInfo.email) {
-          const existingUser = await UsersService.findByProviderAccountId(
+          const existingAccount = await AccountsService.findByProviderAccountId(
+            provider,
             userInfo.id,
             { tx },
           );
+
+          const existingUser = existingAccount
+            ? await UsersService.findById(existingAccount.userId, { tx })
+            : undefined;
 
           if (!existingUser?.email) {
             throw new Error("User info missing required fields (id, email)");
@@ -313,7 +355,7 @@ export namespace OAuthService {
    * @returns Authorization URL
    */
   export function getAuthorizationUrl(
-    provider: SessionProvider,
+    provider: AccountProvider,
     state: string,
   ): string {
     const oauthProvider = oauthProviderFactory.getProvider(provider);

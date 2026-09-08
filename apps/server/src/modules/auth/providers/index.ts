@@ -1,4 +1,4 @@
-import { SessionProvider } from "@sutra/db";
+import { AccountProvider } from "@sutra/db";
 import type { OAuthProvider, OAuthProviderFactory } from "@sutra/shared";
 import { GoogleOAuthProvider } from "./google.provider";
 
@@ -8,21 +8,21 @@ import { GoogleOAuthProvider } from "./google.provider";
  */
 
 class OAuthProviderFactoryImpl implements OAuthProviderFactory {
-  private providers: Map<SessionProvider, () => OAuthProvider> = new Map();
+  private providers: Map<AccountProvider, () => OAuthProvider> = new Map();
 
   constructor() {
     // Register all OAuth providers
-    this.register(SessionProvider.GOOGLE, () => new GoogleOAuthProvider());
+    this.register(AccountProvider.GOOGLE, () => new GoogleOAuthProvider());
     // Add more providers here:
-    // this.register(SessionProvider.APPLE, () => new AppleOAuthProvider());
-    // this.register(SessionProvider.GITHUB, () => new GitHubOAuthProvider());
-    // this.register(SessionProvider.DISCORD, () => new DiscordOAuthProvider());
+    // this.register(AccountProvider.APPLE, () => new AppleOAuthProvider());
+    // this.register(AccountProvider.GITHUB, () => new GitHubOAuthProvider());
+    // this.register(AccountProvider.DISCORD, () => new DiscordOAuthProvider());
   }
 
   /**
    * Register a new OAuth provider
    */
-  register(provider: SessionProvider, factory: () => OAuthProvider): void {
+  register(provider: AccountProvider, factory: () => OAuthProvider): void {
     this.providers.set(provider, factory);
   }
 
@@ -30,7 +30,7 @@ class OAuthProviderFactoryImpl implements OAuthProviderFactory {
    * Get an OAuth provider instance by provider name
    */
   getProvider(provider: string): OAuthProvider {
-    const factory = this.providers.get(provider as SessionProvider);
+    const factory = this.providers.get(provider as AccountProvider);
 
     if (!factory) {
       throw new Error(`OAuth provider "${provider}" is not registered`);
@@ -42,14 +42,14 @@ class OAuthProviderFactoryImpl implements OAuthProviderFactory {
   /**
    * Check if a provider is registered
    */
-  hasProvider(provider: SessionProvider): boolean {
+  hasProvider(provider: AccountProvider): boolean {
     return this.providers.has(provider);
   }
 
   /**
    * Get all registered providers
    */
-  getRegisteredProviders(): SessionProvider[] {
+  getRegisteredProviders(): AccountProvider[] {
     return Array.from(this.providers.keys());
   }
 }

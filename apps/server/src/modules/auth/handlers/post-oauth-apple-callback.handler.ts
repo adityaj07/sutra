@@ -3,7 +3,7 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { type AppRouteHandler } from "@/types";
 import { processOauthCallback } from "./oauth-callback.logic";
 import { errorResponseSchemas } from "@sutra/shared";
-import { SessionProvider } from "@sutra/db";
+import { AccountProvider } from "@sutra/db";
 
 const appleCallbackBodySchema = z.object({
   code: z.string().optional().openapi({
@@ -96,7 +96,7 @@ export const postOauthAppleCallbackHandler: AppRouteHandler<
   }
 
   return processOauthCallback(c, {
-    provider: SessionProvider.APPLE,
+    provider: AccountProvider.APPLE,
     code: body.code,
     state: body.state,
     error: body.error,

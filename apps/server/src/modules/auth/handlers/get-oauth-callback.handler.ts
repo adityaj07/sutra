@@ -1,7 +1,7 @@
 import type { AppRouteHandler } from "@/types";
 import { createRoute, z } from "@hono/zod-openapi";
 import { StatusCodes } from "@sutra/config";
-import { SessionProvider } from "@sutra/db";
+import { AccountProvider } from "@sutra/db";
 import { errorResponseSchemas } from "@sutra/shared";
 import { processOauthCallback } from "./oauth-callback.logic";
 
@@ -15,12 +15,12 @@ export const getOAuthCallbackRoute = createRoute({
   request: {
     params: z.object({
       provider: z
-        .enum(SessionProvider, {
+        .enum(AccountProvider, {
           message: "Invalid OAuth provider",
         })
         .openapi({
           description: "The OAuth provider to use (e.g., google, github)",
-          example: SessionProvider.GOOGLE,
+          example: AccountProvider.GOOGLE,
           param: {
             in: "path",
             name: "provider",

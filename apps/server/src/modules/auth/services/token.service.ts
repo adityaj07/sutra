@@ -1,4 +1,4 @@
-import { SessionStatus, type DBTransaction } from "@sutra/db";
+import { AccountsService, SessionStatus, type DBTransaction } from "@sutra/db";
 import { SessionService } from "@sutra/db";
 import { env } from "@sutra/env/server";
 import { decrypt, encrypt, logger } from "@sutra/shared";
@@ -29,14 +29,18 @@ export namespace TokenService {
 
   /**
    * Check if refresh token is expired
-   * @param session - Session object with refresh token expiration
+   * @param account - account object with refresh token expiration (can be null too if the provider didn't provide one)
    * @returns true if refresh token is expired
    */
-  export function isRefreshTokenExpired(session: {
-    providerRefreshTokenExpiresAt: Date;
+  export function isRefreshTokenExpired(account: {
+    providerRefreshTokenExpiresAt: Date | null;
   }): boolean {
+    if (!account.providerRefreshTokenExpiresAt) {
+      return false;
+    }
+
     const now = new Date();
-    const expiresAt = new Date(session.providerRefreshTokenExpiresAt);
+    const expiresAt = new Date(account.providerRefreshTokenExpiresAt);
 
     return expiresAt <= now;
   }
@@ -63,8 +67,14 @@ export namespace TokenService {
       throw new Error("Session is not active");
     }
 
+    const account = await AccountsService.findById(session.accountId, options);
+
+    if (!account) {
+      throw new Error("Account not found");
+    }
+
     // Check if refresh token is expired
-    if (isRefreshTokenExpired(session)) {
+    if (isRefreshTokenExpired(account)) {
       // Mark session as expired
       await SessionService.updateById(
         sessionId,
@@ -82,16 +92,24 @@ export namespace TokenService {
     }
 
     try {
+      if (
+        !account.providerRefreshToken ||
+        !account.providerRefreshTokenIv ||
+        !account.providerRefreshTokenTag
+      ) {
+        throw new Error("Account is missing refresh token credentials");
+      }
+
       // decrypt the refresh token
       const refreshToken = decrypt(
-        session.providerRefreshToken,
-        session.providerRefreshTokenIv,
-        session.providerRefreshTokenTag,
+        account.providerRefreshToken,
+        account.providerRefreshTokenIv,
+        account.providerRefreshTokenTag,
         env.ENCRYPTION_KEY,
       );
 
       // Get the oauth provider
-      const oauthProvider = oauthProviderFactory.getProvider(session.provider);
+      const oauthProvider = oauthProviderFactory.getProvider(account.provider);
 
       // refresh access token
       const tokenResponse =
@@ -115,12 +133,11 @@ export namespace TokenService {
       );
 
       // build update payload
-      const updatePayload: Parameters<typeof SessionService.updateById>[1] = {
+      const updatePayload: Parameters<typeof AccountsService.updateById>[1] = {
         providerAccessToken: encryptedAccessToken,
         providerAccessTokenIv: accessTokenIv,
         providerAccessTokenTag: accessTokenTag,
         providerAccessTokenExpiresAt: accessTokenExpiresAt,
-        lastAccessedAt: new Date(),
         // update the scope too if provided
         ...(tokenResponse.scope && {
           providerScope: tokenResponse.scope,
@@ -135,18 +152,32 @@ export namespace TokenService {
           tag: refreshTokenTag,
         } = encrypt(tokenResponse.refresh_token, env.ENCRYPTION_KEY);
 
-        const refreshTokenExpiresAt = new Date(
-          Date.now() + (tokenResponse.expires_in || 90 * 24 * 60 * 60) * 1000,
-        );
+        // const refreshTokenExpiresAt = new Date(
+        //   Date.now() + (tokenResponse.expires_in || 90 * 24 * 60 * 60) * 1000,
+        // );
 
         updatePayload.providerRefreshToken = encryptedRefreshToken;
         updatePayload.providerRefreshTokenIv = refreshTokenIv;
         updatePayload.providerRefreshTokenTag = refreshTokenTag;
-        updatePayload.providerRefreshTokenExpiresAt = refreshTokenExpiresAt;
+        // updatePayload.providerRefreshTokenExpiresAt = refreshTokenExpiresAt;
+
+        if (tokenResponse.refresh_token_expires_in != null) {
+          updatePayload.providerRefreshTokenExpiresAt = new Date(
+            Date.now() + tokenResponse.refresh_token_expires_in * 1000,
+          );
+        }
       }
 
-      // update session with new access token
-      await SessionService.updateById(sessionId, updatePayload, options);
+      // update account with new access token
+      await AccountsService.updateById(account.id, updatePayload, options);
+
+      await SessionService.updateById(
+        sessionId,
+        {
+          lastAccessedAt: new Date(),
+        },
+        options,
+      );
 
       logger.audit("Access token refreshed successfully", {
         module: "auth",
@@ -158,12 +189,18 @@ export namespace TokenService {
         accessToken: tokenResponse.access_token,
         accessTokenExpiresAt,
         refreshToken: tokenResponse.refresh_token,
-        refreshTokenExpiresAt: tokenResponse.refresh_token
-          ? new Date(
-              Date.now() +
-                (tokenResponse.expires_in || 90 * 24 * 60 * 60) * 1000,
-            )
-          : undefined,
+        // refreshTokenExpiresAt: tokenResponse.refresh_token
+        //   ? new Date(
+        //       Date.now() +
+        //         (tokenResponse.expires_in || 90 * 24 * 60 * 60) * 1000,
+        //     )
+        //   : undefined,
+        refreshTokenExpiresAt:
+          tokenResponse.refresh_token_expires_in != null
+            ? new Date(
+                Date.now() + tokenResponse.refresh_token_expires_in * 1000,
+              )
+            : undefined,
       };
     } catch (err) {
       logger.error("Error refreshing access token", {

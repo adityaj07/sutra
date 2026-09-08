@@ -13,3 +13,4 @@ export * from "./schema";
 // Export services
 export { UsersService } from "./services/users.service";
 export { SessionService } from "./services/sessions.service";
+export { AccountsService } from "./services/accounts.service";
