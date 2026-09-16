@@ -1,11 +1,11 @@
 {
-  "id": "b34bb01d-53e7-4b4c-8d8b-d4e81f5fb1b1",
+  "id": "7411bc03-ae1f-4dfd-a9fc-adcda3831eb7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "users.sessions": {
-      "name": "sessions",
+    "users.accounts": {
+      "name": "accounts",
       "schema": "users",
       "columns": {
         "id": {
@@ -21,28 +21,21 @@
           "primaryKey": false,
           "notNull": true
         },
-        "status": {
-          "name": "status",
-          "type": "session_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
         "provider": {
           "name": "provider",
-          "type": "session_provider",
+          "type": "account_provider",
           "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "provider_scope": {
-          "name": "provider_scope",
-          "type": "text",
           "primaryKey": false,
           "notNull": true
         },
         "provider_account_id": {
           "name": "provider_account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_scope": {
+          "name": "provider_scope",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -75,23 +68,122 @@
           "name": "provider_refresh_token",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "provider_refresh_token_iv": {
           "name": "provider_refresh_token_iv",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "provider_refresh_token_tag": {
           "name": "provider_refresh_token_tag",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "provider_refresh_token_expires_at": {
           "name": "provider_refresh_token_expires_at",
           "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "accounts_user_id_idx": {
+          "name": "accounts_user_id_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "accounts_user_id_users_id_fk": {
+          "name": "accounts_user_id_users_id_fk",
+          "tableFrom": "accounts",
+          "tableTo": "users",
+          "schemaTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "accounts_provider_provider_account_id_unique": {
+          "name": "accounts_provider_provider_account_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "provider",
+            "provider_account_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "users.sessions": {
+      "name": "sessions",
+      "schema": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "session_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": true
         },
@@ -134,6 +226,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "refresh_token_hash": {
+          "name": "refresh_token_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "metadata": {
           "name": "metadata",
           "type": "jsonb",
@@ -143,36 +241,6 @@
         }
       },
       "indexes": {
-        "sessions_provider_refresh_token_idx": {
-          "name": "sessions_provider_refresh_token_idx",
-          "columns": [
-            {
-              "expression": "provider_refresh_token",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "sessions_provider_account_id_idx": {
-          "name": "sessions_provider_account_id_idx",
-          "columns": [
-            {
-              "expression": "provider_account_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "sessions_user_id_idx": {
           "name": "sessions_user_id_idx",
           "columns": [
@@ -247,21 +315,6 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
-        },
-        "sessions_provider_idx": {
-          "name": "sessions_provider_idx",
-          "columns": [
-            {
-              "expression": "provider",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
         }
       },
       "foreignKeys": {
@@ -276,7 +329,21 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sessions_account_id_accounts_id_fk": {
+          "name": "sessions_account_id_accounts_id_fk",
+          "tableFrom": "sessions",
+          "tableTo": "accounts",
+          "schemaTo": "users",
+          "columnsFrom": [
+            "account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -321,12 +388,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "provider_account_id": {
-          "name": "provider_account_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "role": {
           "name": "role",
           "type": "user_role",
@@ -355,23 +416,7 @@
           "notNull": false
         }
       },
-      "indexes": {
-        "users_email_idx": {
-          "name": "users_email_idx",
-          "columns": [
-            {
-              "expression": "email",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
@@ -381,13 +426,6 @@
           "columns": [
             "email"
           ]
-        },
-        "users_provider_account_id_unique": {
-          "name": "users_provider_account_id_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "provider_account_id"
-          ]
         }
       },
       "policies": {},
@@ -396,8 +434,8 @@
     }
   },
   "enums": {
-    "public.session_provider": {
-      "name": "session_provider",
+    "public.account_provider": {
+      "name": "account_provider",
       "schema": "public",
       "values": [
         "google",
