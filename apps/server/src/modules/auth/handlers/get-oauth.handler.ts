@@ -84,10 +84,13 @@ export const getOAuthHandler: AppRouteHandler<GetOAuthProviderRoute> = (c) => {
   if (!oauthProviderFactory.hasProvider(provider)) {
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "OAuth provider not supported",
-      res: c.json({
-        message: `OAuth provider "${provider}" is not supported`,
-        supportedProviders: oauthProviderFactory.getRegisteredProviders(),
-      }),
+      res: c.json(
+        {
+          message: `OAuth provider "${provider}" is not supported`,
+          supportedProviders: oauthProviderFactory.getRegisteredProviders(),
+        },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 

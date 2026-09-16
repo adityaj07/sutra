@@ -1,12 +1,22 @@
 import type { AppBindings } from "@/types";
 import { StatusCodes } from "@sutra/config";
-import { UsersService } from "@sutra/db";
-import { SessionService } from "@sutra/db";
+import { SessionStatus, SessionService, UsersService } from "@sutra/db";
 import { env } from "@sutra/env/server";
-import { logger, verifyJwt } from "@sutra/shared";
+import { logger, verifySutraToken } from "@sutra/shared";
 import type { MiddlewareHandler } from "hono";
+import type { Context } from "hono";
 import { getCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
+
+function unauthorized(c: Context): HTTPException {
+  return new HTTPException(StatusCodes.HTTP_401_UNAUTHORIZED, {
+    message: "Authentication required.",
+    res: c.json(
+      { message: "Authentication required." },
+      StatusCodes.HTTP_401_UNAUTHORIZED,
+    ),
+  });
+}
 
 // Extract user from the access token and attach to the context
 export const getUserMiddleware: MiddlewareHandler<AppBindings> = async (
@@ -15,45 +25,61 @@ export const getUserMiddleware: MiddlewareHandler<AppBindings> = async (
 ) => {
   try {
     const authHeader = c.req.header("Authorization");
-    const bearerToken = authHeader?.replace("Bearer ", "").trim();
+    const bearerToken = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice("Bearer ".length).trim()
+      : null;
 
     const accessToken =
-      getCookie(c, "access_token") ||
-      (bearerToken && bearerToken !== "Bearer" ? bearerToken : null);
+      getCookie(c, "access_token") || (bearerToken ? bearerToken : null);
 
-    if (accessToken) {
-      // verify access token
-      const decodedToken = verifyJwt<{ userId: string; sessionId: string }>(
-        accessToken,
-        env.JWT_SECRET,
-      );
-
-      // if decoded token is invalid, throw error
-      if (!decodedToken || !decodedToken.userId || !decodedToken.sessionId) {
-        throw new HTTPException(StatusCodes.HTTP_401_UNAUTHORIZED, {
-          message: "Invalid access token",
-          res: c.json(
-            { message: "Invalid access token" },
-            StatusCodes.HTTP_401_UNAUTHORIZED,
-          ),
-        });
-      }
-
-      // check session if its valid and not revoked or expired
-      const session = await SessionService.findById(decodedToken.sessionId);
-
-      // get user details from the userId from the session
-      const user = await UsersService.findById(decodedToken.userId);
-
-      // attach the user to the context
-      if (user) {
-        c.set("user", user);
-      }
-
-      if (session) {
-        c.set("session", session);
-      }
+    // No credential presented: continue anonymously. Protected routes reject
+    // via enforceUserMiddleware; public routes stay accessible.
+    if (!accessToken) {
+      return next();
     }
+
+    // Verify signature, expiration, and Sūtra claims. Throws on malformed,
+    // mis-signed, or expired JWTs; returns null for refresh/legacy tokens
+    // or tokens missing required claims. Either way the request is
+    // unauthenticated — never a 500.
+    let claims;
+
+    try {
+      claims = verifySutraToken(accessToken, env.JWT_SECRET, "access");
+    } catch {
+      throw unauthorized(c);
+    }
+
+    if (!claims) {
+      throw unauthorized(c);
+    }
+
+    // The session row is the server-side source of truth. A cryptographically
+    // valid access JWT alone authenticates nothing.
+    const session = await SessionService.findById(claims.sessionId);
+
+    if (
+      !session ||
+      session.deletedAt !== null ||
+      session.status !== SessionStatus.ACTIVE ||
+      session.revokedAt !== null ||
+      session.expiresAt <= new Date() ||
+      session.userId !== claims.userId
+    ) {
+      throw unauthorized(c);
+    }
+
+    // Deliberately no refreshTokenHash check here: that field belongs to
+    // refresh-token rotation, not access authentication.
+
+    const user = await UsersService.findById(session.userId);
+
+    if (!user || user.deletedAt !== null) {
+      throw unauthorized(c);
+    }
+
+    c.set("user", user);
+    c.set("session", session);
 
     return next();
   } catch (error) {

@@ -63,7 +63,10 @@ export const getOauthSessionEstablishHandler: AppRouteHandler<
   if (!isAllowedRedirectUrl(redirectUrl)) {
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "Invalid redirect URL",
-      res: c.json({ message: "Invalid redirect URL" }),
+      res: c.json(
+        { message: "Invalid redirect URL" },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 
@@ -76,14 +79,20 @@ export const getOauthSessionEstablishHandler: AppRouteHandler<
   } catch {
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "Invalid or expired session ticket",
-      res: c.json({ message: "Invalid or expired session ticket" }),
+      res: c.json(
+        { message: "Invalid or expired session ticket" },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 
   if (decoded.purpose !== OAUTH_SESSION_TICKET_PURPOSE) {
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "Invalid session ticket",
-      res: c.json({ message: "Invalid session ticket" }),
+      res: c.json(
+        { message: "Invalid session ticket" },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 

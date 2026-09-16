@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import {
   AccountsService,
   db,
@@ -8,12 +9,26 @@ import {
 } from "@sutra/db";
 import { SessionService } from "@sutra/db";
 import { env } from "@sutra/env/server";
-import { encrypt, logger, type OAuthProvider } from "@sutra/shared";
+import {
+  encrypt,
+  hashRefreshToken,
+  logger,
+  signSutraToken,
+  type OAuthProvider,
+} from "@sutra/shared";
 import { oauthProviderFactory } from "../providers";
 
 export interface OAuthCallbackResult {
   user: Awaited<ReturnType<typeof UsersService.create>>;
   session: Awaited<ReturnType<typeof SessionService.create>>;
+  /** Sūtra access JWT minted for this session (1h, `type: "access"`). */
+  accessToken: string;
+  /**
+   * Sūtra refresh JWT minted for this session (90d, `type: "refresh"`).
+   * Only `SHA-256(refreshToken)` is persisted (`sessions.refreshTokenHash`);
+   * the raw token is returned to the caller for delivery to the client.
+   */
+  refreshToken: string;
 }
 
 type OAuthUserInfoPayload = {
@@ -224,19 +239,38 @@ async function executeOAuthCallbackTransaction(
     throw new Error("Failed to create or update account during OAuth callback");
   }
 
+  // Mint the Sūtra token pair inside the transaction so the refresh-token
+  // hash can be stored atomically with the session. The session id is
+  // pre-generated here so it matches the `sessionId` claim in both JWTs.
+  const sessionId = randomUUID();
+
+  const accessToken = signSutraToken(
+    { userId: user.id, sessionId, type: "access" },
+    env.JWT_SECRET,
+    { expiresIn: "1h" },
+  );
+
+  const refreshToken = signSutraToken(
+    { userId: user.id, sessionId, type: "refresh" },
+    env.JWT_SECRET,
+    { expiresIn: "90d" },
+  );
+
   const session = await SessionService.create(
     {
+      id: sessionId,
       userId: user.id,
       accountId: account.id,
       status: SessionStatus.ACTIVE,
       expiresAt: sessionExpiresAt,
       lastAccessedAt: new Date(),
+      refreshTokenHash: hashRefreshToken(refreshToken),
       metadata: {},
     },
     { tx },
   );
 
-  return { user, session };
+  return { user, session, accessToken, refreshToken };
 }
 
 export namespace OAuthService {
@@ -245,7 +279,7 @@ export namespace OAuthService {
    * @param provider - The OAuth provider (e.g., AccountProvider.GOOGLE)
    * @param code - Authorization code from OAuth provider
    * @param options - Optional database transaction
-   * @returns User and session created/updated
+   * @returns User and session created/updated, plus the minted Sūtra tokens
    */
   export async function handleCallback(
     provider: AccountProvider,

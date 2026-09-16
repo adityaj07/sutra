@@ -1,5 +1,6 @@
 export * from "./helpers";
 export * from "./jwt";
+export * from "./hash";
 export { logger } from "./logger";
 export * from "./encryption";
 export * from "./configure-openapi";

@@ -60,6 +60,7 @@ export const sessionsTable = usersSchema.table(
       .notNull(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    refreshTokenHash: text("refresh_token_hash"),
     metadata: jsonb("metadata").$type<SessionMetadata>().default({}),
   },
   (table) => [

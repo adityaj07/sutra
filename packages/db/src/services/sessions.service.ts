@@ -6,7 +6,7 @@ import {
   type NewSession,
   type UpdateSession,
 } from "../schema";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, gt, isNull } from "drizzle-orm";
 
 export namespace SessionService {
   /**
@@ -34,7 +34,9 @@ export namespace SessionService {
       logger.audit("Created new session", {
         module: "session",
         action: "service:create",
-        session: session,
+        sessionId: session?.id,
+        userId: session?.userId,
+        accountId: session?.accountId,
       });
 
       return session;
@@ -241,6 +243,75 @@ export namespace SessionService {
       logger.error("Error updating session by id", {
         module: "session",
         action: "service:updateById",
+        error: error,
+      });
+
+      throw error;
+    }
+  }
+
+  /**
+   * Atomically rotates a session's refresh-token hash.
+   *
+   * Replaces `currentHash` with `nextHash` only if the session is still active,
+   * unrevoked, undeleted, unexpired, and still holds `currentHash`. Concurrent
+   * refreshes with the same old token therefore cannot both succeed: exactly
+   * one conditional update matches.
+   * @param id session id to rotate
+   * @param currentHash expected currently stored hash
+   * @param nextHash replacement hash
+   * @param options extra options for query
+   * @returns the rotated session, or undefined when preconditions failed
+   */
+  export async function rotateRefreshTokenHash(
+    id: string,
+    currentHash: string,
+    nextHash: string,
+    options?: {
+      /**
+       * Transaction to use for the query
+       */
+      tx?: DBTransaction;
+    },
+  ) {
+    const queryClient = options?.tx ?? db;
+    try {
+      const now = new Date();
+
+      const result = await queryClient
+        .update(sessionsTable)
+        .set({
+          refreshTokenHash: nextHash,
+          lastAccessedAt: now,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(sessionsTable.id, id),
+            eq(sessionsTable.refreshTokenHash, currentHash),
+            eq(sessionsTable.status, SessionStatus.ACTIVE),
+            isNull(sessionsTable.revokedAt),
+            isNull(sessionsTable.deletedAt),
+            gt(sessionsTable.expiresAt, now),
+          ),
+        )
+        .returning();
+
+      const [rotatedSession] = result;
+
+      if (rotatedSession) {
+        logger.audit("Rotated session refresh token hash", {
+          module: "session",
+          action: "service:rotateRefreshTokenHash",
+          sessionId: id,
+        });
+      }
+
+      return rotatedSession;
+    } catch (error) {
+      logger.error("Error rotating session refresh token hash", {
+        module: "session",
+        action: "service:rotateRefreshTokenHash",
         error: error,
       });
 

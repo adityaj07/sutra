@@ -36,9 +36,12 @@ export async function processOauthCallback(
   if (!oauthProviderFactory.hasProvider(provider)) {
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "OAuth provider not supported",
-      res: c.json({
-        message: `OAuth provider "${provider}" is not supported`,
-      }),
+      res: c.json(
+        {
+          message: `OAuth provider "${provider}" is not supported`,
+        },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 
@@ -54,10 +57,13 @@ export async function processOauthCallback(
 
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "OAuth authorization failed",
-      res: c.json({
-        message: "OAuth authorization failed",
-        error: error_description || error,
-      }),
+      res: c.json(
+        {
+          message: "OAuth authorization failed",
+          error: error_description || error,
+        },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 
@@ -71,9 +77,12 @@ export async function processOauthCallback(
 
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "Authorization code is required",
-      res: c.json({
-        message: "Authorization code is required",
-      }),
+      res: c.json(
+        {
+          message: "Authorization code is required",
+        },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 
@@ -86,9 +95,12 @@ export async function processOauthCallback(
 
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "State parameter is required for security",
-      res: c.json({
-        message: "State parameter is required for security",
-      }),
+      res: c.json(
+        {
+          message: "State parameter is required for security",
+        },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 
@@ -108,9 +120,12 @@ export async function processOauthCallback(
 
     throw new HTTPException(StatusCodes.HTTP_400_BAD_REQUEST, {
       message: "Invalid state parameter",
-      res: c.json({
-        message: "Invalid state parameter",
-      }),
+      res: c.json(
+        {
+          message: "Invalid state parameter",
+        },
+        StatusCodes.HTTP_400_BAD_REQUEST,
+      ),
     });
   }
 
@@ -122,7 +137,12 @@ export async function processOauthCallback(
       },
     });
 
-    const { user: authUser, session } = result;
+    const {
+      user: authUser,
+      session,
+      accessToken: serverAccessToken,
+      refreshToken: serverRefreshToken,
+    } = result;
 
     logger.audit(`User authenticated via ${provider} OAuth`, {
       module: "auth",
@@ -132,18 +152,6 @@ export async function processOauthCallback(
       email: authUser?.email,
       sessionId: session?.id,
     });
-
-    const serverAccessToken = signJwt(
-      { userId: authUser?.id, sessionId: session?.id },
-      env.JWT_SECRET,
-      { expiresIn: "1h" },
-    );
-
-    const serverRefreshToken = signJwt(
-      { userId: authUser?.id, sessionId: session?.id },
-      env.JWT_SECRET,
-      { expiresIn: "90d" },
-    );
 
     if (decodedState.redirect === "false") {
       return c.json({
@@ -184,9 +192,12 @@ export async function processOauthCallback(
 
     throw new HTTPException(StatusCodes.HTTP_500_INTERNAL_SERVER_ERROR, {
       message: "Internal Server Error",
-      res: c.json({
-        message: "Internal Server Error",
-      }),
+      res: c.json(
+        {
+          message: "Internal Server Error",
+        },
+        StatusCodes.HTTP_500_INTERNAL_SERVER_ERROR,
+      ),
     });
   }
 }

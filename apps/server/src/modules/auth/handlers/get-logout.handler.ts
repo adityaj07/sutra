@@ -4,17 +4,18 @@ import { createRoute, z } from "@hono/zod-openapi";
 import { StatusCodes } from "@sutra/config";
 import { SessionStatus } from "@sutra/db";
 import { SessionService } from "@sutra/db";
+import { env } from "@sutra/env/server";
 import { errorResponseSchemas, logger } from "@sutra/shared";
 import { deleteCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
 
 export const getLogoutRoute = createRoute({
-  method: "get",
+  method: "post",
   path: "/v1/auth/logout",
   tags: ["Auth"],
   summary: "Logout user",
   description:
-    "Logs out the currently authenticated user by clearing their session",
+    "Revokes the currently authenticated Sūtra session and clears the web session cookies. Only the current session is revoked; other sessions are unaffected.",
   middleware: [enforceUserMiddleware],
   responses: {
     200: {
@@ -34,6 +35,8 @@ export const getLogoutRoute = createRoute({
 export type GetLogoutRoute = typeof getLogoutRoute;
 
 export const getLogoutHandler: AppRouteHandler<GetLogoutRoute> = async (c) => {
+  // The authenticated session is the authority. No request-body sessionId is
+  // accepted, so a client can only ever revoke its own current session.
   const session = c.get("session");
   const user = c.get("user");
 
@@ -45,12 +48,22 @@ export const getLogoutHandler: AppRouteHandler<GetLogoutRoute> = async (c) => {
 
   try {
     await SessionService.updateById(session.id, {
-      revokedAt: new Date(),
       status: SessionStatus.REVOKED,
+      revokedAt: new Date(),
+      refreshTokenHash: null,
     });
 
-    deleteCookie(c, "access_token");
-    deleteCookie(c, "refresh_token");
+    // Mirror the establishment attributes so browsers match and remove the
+    // cookies. Secure only in production so deletion is honored over
+    // plain-HTTP development origins.
+    const cookieOptions = {
+      path: "/",
+      secure: env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+    };
+
+    deleteCookie(c, "access_token", cookieOptions);
+    deleteCookie(c, "refresh_token", cookieOptions);
 
     logger.audit("User logged out", {
       module: "auth",
