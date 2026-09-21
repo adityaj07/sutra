@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "uniwind";
+@import "heroui-native/styles";
+
+@layer theme {
+  @variant light {
+    --sutra-brand: var(--accent);
+  }
+
+  @variant dark {
+    --sutra-brand: var(--accent);
+  }
+}
+
+@theme inline {
+  --color-sutra-brand: var(--sutra-brand);
+}

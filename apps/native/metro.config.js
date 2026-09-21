@@ -1,7 +1,12 @@
-const { withVarlockMetroConfig } = require("@varlock/expo-integration/metro-config");
-// Learn more https://docs.expo.io/guides/customizing-metro
+const {
+  withVarlockMetroConfig,
+} = require("@varlock/expo-integration/metro-config");
 const { getDefaultConfig } = require("expo/metro-config");
+const { withUniwindConfig } = require("uniwind/metro");
 
 const config = getDefaultConfig(__dirname);
 
-module.exports = withVarlockMetroConfig(config);
+module.exports = withUniwindConfig(withVarlockMetroConfig(config), {
+  cssEntryFile: "./global.css", // relative path, not absolute
+  dtsFile: "./uniwind-types.d.ts",
+});

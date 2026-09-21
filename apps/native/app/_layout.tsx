@@ -1,11 +1,17 @@
 import { Stack } from "expo-router";
-import { DarkTheme, DefaultTheme, ThemeProvider } from "expo-router/react-navigation";
+import {
+  DarkTheme,
+  DefaultTheme,
+  ThemeProvider,
+} from "expo-router/react-navigation";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "../global.css";
 
 import { NAV_THEME } from "@/lib/constants";
 import { useColorScheme } from "@/lib/use-color-scheme";
+import { HeroUINativeProvider } from "heroui-native";
 
 const LIGHT_THEME = {
   ...DefaultTheme,
@@ -14,10 +20,6 @@ const LIGHT_THEME = {
 const DARK_THEME = {
   ...DarkTheme,
   colors: NAV_THEME.dark,
-};
-
-export const unstable_settings = {
-  initialRouteName: "(drawer)",
 };
 
 const styles = StyleSheet.create({
@@ -34,10 +36,12 @@ export default function RootLayout() {
       <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
         <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
         <GestureHandlerRootView style={styles.container}>
-          <Stack>
-            <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-            <Stack.Screen name="modal" options={{ title: "Modal", presentation: "modal" }} />
-          </Stack>
+          <HeroUINativeProvider>
+            <Stack>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(app)" options={{ headerShown: false }} />
+            </Stack>
+          </HeroUINativeProvider>
         </GestureHandlerRootView>
       </ThemeProvider>
     </>
