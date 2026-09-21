@@ -14,21 +14,11 @@ export default function Modal() {
       <View style={styles.container}>
         <Host style={styles.expoUiHost}>
           <Column spacing={12} alignment="center">
-            <ExpoUIText
-              textStyle={{
-                color: theme.text,
-                fontSize: 20,
-                fontWeight: "bold",
-              }}
-            >
+            <ExpoUIText textStyle={{ color: theme.text, fontSize: 20, fontWeight: "bold" }}>
               Modal
             </ExpoUIText>
             <ExpoUIText
-              textStyle={{
-                color: theme.text,
-                fontSize: 14,
-                textAlign: "center",
-              }}
+              textStyle={{ color: theme.text, fontSize: 14, textAlign: "center" }}
               style={{ opacity: 0.7 }}
             >
               Built with Expo UI universal components

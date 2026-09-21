@@ -30,20 +30,12 @@ export default function NotFoundScreen() {
                   Page Not Found
                 </ExpoUIText>
                 <ExpoUIText
-                  textStyle={{
-                    color: theme.text,
-                    fontSize: 14,
-                    textAlign: "center",
-                  }}
+                  textStyle={{ color: theme.text, fontSize: 14, textAlign: "center" }}
                   style={{ opacity: 0.7 }}
                 >
                   Sorry, the page you're looking for doesn't exist.
                 </ExpoUIText>
-                <Button
-                  label="Go to Home"
-                  variant="outlined"
-                  onPress={() => router.replace("/")}
-                />
+                <Button label="Go to Home" variant="outlined" onPress={() => router.replace("/")} />
               </Column>
             </Host>
           </View>
