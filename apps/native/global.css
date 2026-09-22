@@ -3,15 +3,236 @@
 @import "heroui-native/styles";
 
 @layer theme {
-  @variant light {
-    --sutra-brand: var(--accent);
-  }
+  :root {
+    @variant light {
+      /* ─────────────────────────────
+       * Core
+       * ───────────────────────────── */
 
-  @variant dark {
-    --sutra-brand: var(--accent);
+      --background: #fffaf8;
+      --foreground: #211b1b;
+
+      /* ─────────────────────────────
+       * Surfaces
+       * ───────────────────────────── */
+
+      --surface: #ffffff;
+      --surface-secondary: #f8f2ef;
+      --surface-tertiary: #eee6e2;
+
+      /* ─────────────────────────────
+       * Brand
+       * ───────────────────────────── */
+
+      --accent: #ef1d43;
+      --accent-foreground: #ffffff;
+
+      /* ─────────────────────────────
+       * Neutral
+       * ───────────────────────────── */
+
+      --default: #eee8e5;
+      --default-foreground: #211b1b;
+
+      --muted: #766b68;
+      --muted-foreground: #8b807d;
+
+      /* ─────────────────────────────
+       * Structure
+       * ───────────────────────────── */
+
+      --border: #e5dcd8;
+      --separator: #eee7e4;
+
+      /* ─────────────────────────────
+       * Status
+       * ───────────────────────────── */
+
+      --success: #278b5b;
+      --success-foreground: #ffffff;
+
+      --warning: #b97818;
+      --warning-foreground: #ffffff;
+
+      --danger: #c92d3d;
+      --danger-foreground: #ffffff;
+
+      /* ─────────────────────────────
+       * Sūtra-specific
+       * ───────────────────────────── */
+
+      --unread: #ef1d43;
+      --mention: #a34b92;
+
+      --online: #278b5b;
+      --away: #b97818;
+      --offline: #8b8582;
+    }
+
+    @variant dark {
+      /* ─────────────────────────────
+       * Core
+       * ───────────────────────────── */
+
+      --background: #171514;
+      --foreground: #f8f3f1;
+
+      /* ─────────────────────────────
+       * Surfaces
+       * ───────────────────────────── */
+
+      --surface: #211e1d;
+      --surface-secondary: #292523;
+      --surface-tertiary: #332d2a;
+
+      /* ─────────────────────────────
+       * Brand
+       * ───────────────────────────── */
+
+      --accent: #ff536b;
+      --accent-foreground: #ffffff;
+
+      /* ─────────────────────────────
+       * Neutral
+       * ───────────────────────────── */
+
+      --default: #332d2a;
+      --default-foreground: #f8f3f1;
+
+      --muted: #b7aaa6;
+      --muted-foreground: #968b87;
+
+      /* ─────────────────────────────
+       * Structure
+       * ───────────────────────────── */
+
+      --border: #3b3431;
+      --separator: #302a28;
+
+      /* ─────────────────────────────
+       * Status
+       * ───────────────────────────── */
+
+      --success: #43b77a;
+      --success-foreground: #ffffff;
+
+      --warning: #e1a93d;
+      --warning-foreground: #211b15;
+
+      --danger: #ff6675;
+      --danger-foreground: #ffffff;
+
+      /* ─────────────────────────────
+       * Sūtra-specific
+       * ───────────────────────────── */
+
+      --unread: #ff536b;
+      --mention: #d46ab3;
+
+      --online: #43b77a;
+      --away: #e1a93d;
+      --offline: #79736f;
+    }
   }
 }
 
 @theme inline {
-  --color-sutra-brand: var(--sutra-brand);
+  /* ─────────────────────────────
+   * Core
+   * ───────────────────────────── */
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* ─────────────────────────────
+   * Surfaces
+   * ───────────────────────────── */
+
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-tertiary: var(--surface-tertiary);
+
+  /* ─────────────────────────────
+   * Brand
+   * ───────────────────────────── */
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  /* ─────────────────────────────
+   * Neutral
+   * ───────────────────────────── */
+
+  --color-default: var(--default);
+  --color-default-foreground: var(--default-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  /* ─────────────────────────────
+   * Structure
+   * ───────────────────────────── */
+
+  --color-border: var(--border);
+  --color-separator: var(--separator);
+
+  /* ─────────────────────────────
+   * Status
+   * ───────────────────────────── */
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+
+  /* ─────────────────────────────
+   * Sūtra-specific
+   * ───────────────────────────── */
+
+  --color-unread: var(--unread);
+  --color-mention: var(--mention);
+
+  --color-online: var(--online);
+  --color-away: var(--away);
+  --color-offline: var(--offline);
+
+  /* ─────────────────────────────
+   * Sūtra aliases
+   * ───────────────────────────── */
+
+  --color-sutra-background: var(--background);
+  --color-sutra-foreground: var(--foreground);
+
+  --color-sutra-surface: var(--surface);
+  --color-sutra-surface-secondary: var(--surface-secondary);
+  --color-sutra-surface-tertiary: var(--surface-tertiary);
+
+  --color-sutra-border: var(--border);
+  --color-sutra-separator: var(--separator);
+
+  --color-sutra-primary: var(--accent);
+  --color-sutra-primary-foreground: var(--accent-foreground);
+
+  --color-sutra-default: var(--default);
+  --color-sutra-default-foreground: var(--default-foreground);
+
+  --color-sutra-muted: var(--muted);
+  --color-sutra-muted-foreground: var(--muted-foreground);
+
+  --color-sutra-success: var(--success);
+  --color-sutra-warning: var(--warning);
+  --color-sutra-danger: var(--danger);
+
+  --color-sutra-unread: var(--unread);
+  --color-sutra-mention: var(--mention);
+
+  --color-sutra-online: var(--online);
+  --color-sutra-away: var(--away);
+  --color-sutra-offline: var(--offline);
 }
+
+@source '../../node_modules/heroui-native/lib';

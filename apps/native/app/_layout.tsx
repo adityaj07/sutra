@@ -4,6 +4,7 @@ import {
   DefaultTheme,
   ThemeProvider,
 } from "expo-router/react-navigation";
+import { NavigationBar } from "expo-navigation-bar";
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -35,6 +36,7 @@ export default function RootLayout() {
     <>
       <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
         <StatusBar style={isDarkColorScheme ? "light" : "dark"} />
+        {/* <NavigationBar style={isDarkColorScheme ? "dark" : "light"} /> */}
         <GestureHandlerRootView style={styles.container}>
           <HeroUINativeProvider>
             <Stack>

@@ -1,18 +1,19 @@
 export const NAV_THEME = {
   light: {
-    background: "hsl(0 0% 100%)",
-    border: "hsl(220 13% 91%)",
-    card: "hsl(0 0% 100%)",
-    notification: "hsl(0 84.2% 60.2%)",
-    primary: "hsl(221.2 83.2% 53.3%)",
-    text: "hsl(222.2 84% 4.9%)",
+    background: "#fffaf8",
+    border: "#e5dcd8",
+    card: "#ffffff",
+    notification: "#ef1d43",
+    primary: "#ef1d43",
+    text: "#211b1b",
   },
+
   dark: {
-    background: "hsl(222.2 84% 4.9%)",
-    border: "hsl(217.2 32.6% 17.5%)",
-    card: "hsl(222.2 84% 4.9%)",
-    notification: "hsl(0 72% 51%)",
-    primary: "hsl(217.2 91.2% 59.8%)",
-    text: "hsl(210 40% 98%)",
+    background: "#171514",
+    border: "#3b3431",
+    card: "#211e1d",
+    notification: "#ff536b",
+    primary: "#ff536b",
+    text: "#f8f3f1",
   },
 };
