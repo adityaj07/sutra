@@ -5,7 +5,7 @@ import { z } from "zod";
 // dynamic import only, so importing the client graph under bun never touches
 // native modules; all storage/network access below is injected per call.
 
-import { apiRequest } from "@/lib/api/client";
+import { apiPost, apiRequest } from "@/lib/api/client";
 import { REFRESH_PATH as REFRESH_PATH_FOR_TESTS } from "@/lib/api/config";
 import { ApiError, isApiError } from "@/lib/api/errors";
 import { RefreshError } from "@/lib/api/refresh-coordinator";
@@ -146,18 +146,20 @@ describe("apiRequest", () => {
 
     let refreshCalls = 0;
     const failure = await rejectionOf(
-      apiRequest(REFRESH_PATH_FOR_TESTS, {
-        method: "POST",
-        body: { refreshToken: "R1" },
-        auth: false,
-        baseUrlOverride: BASE,
-        fetchImpl,
-        refresher: async () => {
-          refreshCalls += 1;
-          return "A2";
+      apiPost(
+        REFRESH_PATH_FOR_TESTS,
+        { refreshToken: "R1" },
+        {
+          auth: false,
+          baseUrlOverride: BASE,
+          fetchImpl,
+          refresher: async () => {
+            refreshCalls += 1;
+            return "A2";
+          },
+          notifyAuthInvalid: () => {},
         },
-        notifyAuthInvalid: () => {},
-      }),
+      ),
     );
     expect(isApiError(failure) && failure.status === 401).toBe(true);
     expect(refreshCalls).toBe(0);

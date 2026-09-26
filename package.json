@@ -21,6 +21,7 @@
   },
   "type": "module",
   "scripts": {
+    "api:generate": "turbo run api:generate",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",

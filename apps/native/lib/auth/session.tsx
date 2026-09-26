@@ -13,11 +13,7 @@ import {
   meResponseSchema,
   type TokenPair,
 } from "@/lib/api/auth-schemas";
-import type {
-  LogoutResponseBody,
-  MeResponseBody,
-  SessionUser,
-} from "@/lib/api/api-contract";
+import type { SessionUser } from "@/lib/api/api-contract";
 import { apiLog } from "@/lib/api/log";
 import { queryClient } from "@/lib/query-client";
 import { sessionStore } from "@/lib/auth/session-store";
@@ -85,20 +81,20 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }
 
       try {
-        const me = await apiGet<MeResponseBody>("/v1/auth/me", {
+        const me = await apiGet("/v1/auth/me", {
           schema: meResponseSchema,
         });
         if (!cancelled) {
           setUser(me.payload.user);
           setStatus("authenticated");
-          apiLog("session bootstrap: authenticated");
+          apiLog("session.bootstrap.authenticated");
         }
       } catch {
         // 401: client already cleared + notified (idempotent here).
         // Transient: tokens retained, retry happens on next launch/sign-in.
         if (!cancelled) {
           markUnauthenticated();
-          apiLog("session bootstrap: unauthenticated");
+          apiLog("session.bootstrap.unauthenticated");
         }
       }
     })();
@@ -112,11 +108,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     // Server logout is best-effort: a dead network must not trap the user
     // in a locally authenticated state. Local clear always runs.
     try {
-      await apiPost<LogoutResponseBody>("/v1/auth/logout", undefined, {
+      await apiPost("/v1/auth/logout", undefined, {
         schema: logoutResponseSchema,
       });
     } catch {
-      apiLog("signOut: server logout failed, clearing locally");
+      apiLog("signout.server_logout_failed");
     }
     await sessionStore.clear();
     queryClient.clear();
@@ -124,7 +120,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [markUnauthenticated]);
 
   const refreshUser = useCallback(async () => {
-    const me = await apiGet<MeResponseBody>("/v1/auth/me", {
+    const me = await apiGet("/v1/auth/me", {
       schema: meResponseSchema,
     });
     setUser(me.payload.user);
@@ -139,7 +135,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         accessTokenExpiresAt: tokens.accessTokenExpiresAt,
       });
       try {
-        const me = await apiGet<MeResponseBody>("/v1/auth/me", {
+        const me = await apiGet("/v1/auth/me", {
           schema: meResponseSchema,
         });
         setUser(me.payload.user);

@@ -1,5 +1,6 @@
 import { ApiError } from "@/lib/api/errors";
 import type { TokenSet } from "@/lib/auth/session-store";
+import type { RefreshResponseBody } from "@/lib/api/api-contract";
 
 /**
  * Single-flight refresh coordinator.
@@ -11,10 +12,19 @@ import type { TokenSet } from "@/lib/auth/session-store";
  * production dependencies (SecureStore, fetch transport).
  */
 
-export interface RefreshTransportResult {
-  accessToken: string;
+/**
+ * What a completed refresh yields, derived from the generated contract:
+ * `POST /v1/auth/refresh-token` marks `refreshToken` optional because the
+ * cookie transport omits it, but native's JSON transport needs it — so the
+ * optionality is resolved here instead of being re-declared by hand.
+ */
+export interface RefreshTransportResult extends Pick<
+  RefreshResponseBody["payload"],
+  "accessToken"
+> {
   refreshToken: string;
-  accessTokenExpiresAt?: string;
+  /** Optional client-side: the coordinator persists whatever arrived. */
+  accessTokenExpiresAt?: RefreshResponseBody["payload"]["accessTokenExpiresAt"];
 }
 
 export type RefreshFailureKind =

@@ -12,7 +12,10 @@
       "inputs": ["$TURBO_DEFAULT$", "eslint.config.*"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^check-types", "api:generate"]
+    },
+    "api:generate": {
+      "cache": false
     },
     "dev": {
       "cache": false,

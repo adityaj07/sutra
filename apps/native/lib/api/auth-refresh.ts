@@ -1,4 +1,5 @@
 import { refreshResponseSchema } from "@/lib/api/auth-schemas";
+import type { RefreshRequestBody } from "@/lib/api/api-contract";
 import {
   DEFAULT_TIMEOUT_MS,
   REFRESH_PATH,
@@ -38,6 +39,8 @@ async function executeRefresh(
   const requestId = newRequestId();
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  // Native JSON-body transport, shaped by the generated contract.
+  const requestBody: RefreshRequestBody = { refreshToken };
 
   try {
     const response = await fetch(`${baseUrl}${REFRESH_PATH}`, {
@@ -47,7 +50,7 @@ async function executeRefresh(
         Accept: "application/json",
         [REQUEST_ID_HEADER]: requestId,
       },
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify(requestBody),
       signal: controller.signal,
     });
 
@@ -75,7 +78,7 @@ async function executeRefresh(
 
     const parsed = refreshResponseSchema.safeParse(json);
     if (!parsed.success) {
-      apiWarn(`refresh response failed validation (${responseRequestId})`);
+      apiWarn("refresh.response.invalid", { requestId: responseRequestId });
       throw new ApiError({
         message: "Invalid refresh response",
         code: "invalid-response",

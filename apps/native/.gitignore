@@ -42,6 +42,3 @@ yarn-error.*
 
 !.env.schema
 /src/env.ts
-
-# generated OpenAPI contract types (regenerate with `bun run api:generate`)
-/lib/api/generated.ts

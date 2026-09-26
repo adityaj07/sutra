@@ -98,7 +98,8 @@ sutra/
 │   └── server/      # Backend API (Hono)
 ├── packages/
 │   ├── ui/          # Shared shadcn/ui components and styles
-│   └── db/          # Database schema & queries
+│   ├── db/          # Database schema & queries
+│   └── api-types/   # Generated types for the backend OpenAPI contract
 ```
 
 ## Available Scripts
@@ -111,7 +112,7 @@ sutra/
 - `bun run dev:native`: Start the React Native/Expo development server
 - `bun run db:push`: Push schema changes to database
 - `bun run db:generate`: Generate database client/types
-- `bun --filter native api:generate`: Regenerate native OpenAPI contract types (backend must be running)
+- `bun run api:generate`: Regenerate the TypeScript API contract types from the backend OpenAPI document (offline; no running server needed)
 - `bun run db:migrate`: Run database migrations
 - `bun run db:studio`: Open database studio UI
 - `bun run docker:build`: Build the Docker Compose images

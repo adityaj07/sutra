@@ -14,11 +14,12 @@ import type {
  * on node-only packages (`@sutra/db`, `drizzle-orm`, `pg`, Hono server
  * bindings) — so native keeps minimal hand-written Zod schemas for runtime
  * validation of the endpoints it consumes. Compile-time TYPES come from the
- * generated contract (`api-contract.ts`, backed by `generated.ts`).
+ * generated contract (`api-contract.ts`, backed by `@sutra/api-types`).
  *
  * The `Equals` assertions below fail compilation if a mirror drifts from
- * the generated contract (e.g. after `bun run api:generate` picks up a
- * backend change) — update the mirror, never the generated file.
+ * the generated contract (e.g. after `bun run api:generate` from the repo
+ * root picks up a backend change) — update the mirror, never the generated
+ * file.
  *
  * Backend sources:
  * - refresh: apps/server/src/modules/auth/handlers/post-refresh-token.handler.ts

@@ -9,7 +9,7 @@ import {
   apiErrorFromFetchFailure,
   apiErrorFromResponse,
 } from "@/lib/api/errors";
-import { apiLog, apiWarn } from "@/lib/api/log";
+import { apiWarn, logApiRequest } from "@/lib/api/log";
 import { refreshAccessToken } from "@/lib/api/auth-refresh";
 import {
   isRefreshError,
@@ -17,18 +17,31 @@ import {
 } from "@/lib/api/refresh-coordinator";
 import { newRequestId } from "@/lib/api/request-id";
 import { sessionStore } from "@/lib/auth/session-store";
+import type {
+  ApiGetMethod,
+  ApiMethod,
+  ApiPath,
+  ApiPostMethod,
+  ApiRequestBody,
+  ApiResponse,
+} from "@sutra/api-types";
 
 /**
  * Low-level native API transport over `fetch`. Knows HTTP + auth/session
  * concerns only — no domain logic (channels, messages, organizations, ...).
+ *
+ * Request/response typing comes from the generated backend contract
+ * (`@sutra/api-types`): the path fixes the allowed methods, the method fixes
+ * the JSON request body, and the documented 2xx JSON body is the default
+ * result type. Passing a `schema` overrides the result type with the validated
+ * one (what every call site does today). Prefer `apiGet`/`apiPost`, which infer
+ * the method for you.
  *
  * Authenticated flow: `Authorization: Bearer <access-token>` (never cookies).
  * On 401 (and only 401): single-flight refresh, then exactly one retry.
  * 403/404/429/5xx never trigger refresh. The refresh endpoint itself never
  * passes through this interceptor.
  */
-
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 
 /** Minimal structural type satisfied by any Zod object schema. */
 export interface ResponseSchema<T> {
@@ -37,10 +50,14 @@ export interface ResponseSchema<T> {
     | { success: false; error: unknown };
 }
 
-export interface ApiRequestOptions<T> {
-  method?: HttpMethod;
-  /** JSON-serializable body (methods other than GET). */
-  body?: unknown;
+export interface ApiRequestOptions<
+  T,
+  P extends ApiPath = ApiPath,
+  M extends ApiMethod<P> = ApiMethod<P>,
+> {
+  method?: Uppercase<M>;
+  /** JSON-serializable body, shaped by the contract for `P` + `M`. */
+  body?: ApiRequestBody<P, M>;
   /** Validates the success payload; inferred type flows to the caller. */
   schema?: ResponseSchema<T>;
   /** Default true. False for the refresh transport and public endpoints. */
@@ -78,10 +95,11 @@ function isAbortError(error: unknown): boolean {
   return error instanceof Error && error.name === "AbortError";
 }
 
-export async function apiRequest<T>(
-  path: string,
-  options: ApiRequestOptions<T> = {},
-): Promise<T> {
+export async function apiRequest<
+  P extends ApiPath,
+  M extends ApiMethod<P>,
+  T = ApiResponse<P, M>,
+>(path: P, options: ApiRequestOptions<T, P, M> = {}): Promise<T> {
   const {
     method = "GET",
     body,
@@ -98,7 +116,7 @@ export async function apiRequest<T>(
 
   const baseUrl = getBaseUrl(baseUrlOverride);
   const requestId = newRequestId();
-  apiLog(`${method} ${path}`);
+  logApiRequest({ method, path, outcome: "started", requestId });
 
   const doFetch = async (accessToken: string | null): Promise<Response> => {
     const headers: Record<string, string> = {
@@ -179,7 +197,12 @@ export async function apiRequest<T>(
     if (schema) {
       const parsed = schema.safeParse(json);
       if (!parsed.success) {
-        apiWarn(`response validation failed for ${method} ${path}`);
+        apiWarn("response.invalid", {
+          method,
+          path,
+          status: response.status,
+          requestId: responseRequestId,
+        });
         throw new ApiError({
           message: "Invalid response from server",
           code: "invalid-response",
@@ -200,7 +223,13 @@ export async function apiRequest<T>(
       response,
       requestId: responseRequestId,
     });
-    apiLog(`${method} ${path} → ${error.status}`);
+    logApiRequest({
+      method,
+      path,
+      outcome: "error-after-refresh",
+      status: error.status ?? undefined,
+      requestId,
+    });
     throw error;
   };
 
@@ -209,7 +238,13 @@ export async function apiRequest<T>(
   const response = await doFetch(token);
 
   if (response.ok) {
-    apiLog(`${method} ${path} → ${response.status}`);
+    logApiRequest({
+      method,
+      path,
+      outcome: "success",
+      status: response.status,
+      requestId,
+    });
     return readSuccess(response);
   }
 
@@ -217,7 +252,13 @@ export async function apiRequest<T>(
     response,
     requestId: response.headers.get(REQUEST_ID_HEADER) ?? requestId,
   });
-  apiLog(`${method} ${path} → ${error.status}`);
+  logApiRequest({
+    method,
+    path,
+    outcome: "http-error",
+    status: error.status ?? undefined,
+    requestId,
+  });
 
   // Bounded auth recovery: exactly one refresh + one retry, 401 only, never
   // for the refresh transport itself.
@@ -241,7 +282,13 @@ export async function apiRequest<T>(
 
     const retry = await doFetch(refreshedToken);
     if (retry.ok) {
-      apiLog(`${method} ${path} → ${retry.status} (after refresh)`);
+      logApiRequest({
+        method,
+        path,
+        outcome: "success-after-refresh",
+        status: retry.status,
+        requestId,
+      });
       return readSuccess(retry);
     }
     // Retry also 401 (or anything else): fail. Never refresh twice.
@@ -252,17 +299,27 @@ export async function apiRequest<T>(
 }
 
 /** Convenience wrappers sharing `apiRequest` semantics. */
-export function apiGet<T>(
-  path: string,
-  options?: Omit<ApiRequestOptions<T>, "method" | "body">,
+export function apiGet<P extends ApiPath, T = ApiResponse<P, ApiGetMethod<P>>>(
+  path: P,
+  options?: Omit<ApiRequestOptions<T, P, ApiGetMethod<P>>, "method" | "body">,
 ): Promise<T> {
-  return apiRequest<T>(path, { ...options, method: "GET" });
+  return apiRequest<P, ApiGetMethod<P>, T>(path, {
+    ...options,
+    method: "GET" as Uppercase<ApiGetMethod<P>>,
+  });
 }
 
-export function apiPost<T>(
-  path: string,
-  body?: unknown,
-  options?: Omit<ApiRequestOptions<T>, "method" | "body">,
+export function apiPost<
+  P extends ApiPath,
+  T = ApiResponse<P, ApiPostMethod<P>>,
+>(
+  path: P,
+  body?: ApiRequestBody<P, ApiPostMethod<P>>,
+  options?: Omit<ApiRequestOptions<T, P, ApiPostMethod<P>>, "method" | "body">,
 ): Promise<T> {
-  return apiRequest<T>(path, { ...options, method: "POST", body });
+  return apiRequest<P, ApiPostMethod<P>, T>(path, {
+    ...options,
+    method: "POST" as Uppercase<ApiPostMethod<P>>,
+    body,
+  });
 }
