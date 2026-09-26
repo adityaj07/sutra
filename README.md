@@ -111,6 +111,7 @@ sutra/
 - `bun run dev:native`: Start the React Native/Expo development server
 - `bun run db:push`: Push schema changes to database
 - `bun run db:generate`: Generate database client/types
+- `bun --filter native api:generate`: Regenerate native OpenAPI contract types (backend must be running)
 - `bun run db:migrate`: Run database migrations
 - `bun run db:studio`: Open database studio UI
 - `bun run docker:build`: Build the Docker Compose images

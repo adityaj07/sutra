@@ -17,3 +17,15 @@ export const NAV_THEME = {
     text: "#f8f3f1",
   },
 };
+
+/**
+ * Centralized SecureStore keys for session credentials.
+ * Do not scatter string literals elsewhere — always import from here.
+ * Tokens live ONLY in SecureStore (never MMKV, AsyncStorage, query cache).
+ */
+export const SESSION_KEYS = {
+  accessToken: "sutra.access-token",
+  refreshToken: "sutra.refresh-token",
+  /** Non-sensitive ISO expiry of the access token (backend `accessTokenExpiresAt`). */
+  accessTokenExpiresAt: "sutra.access-token-expires-at",
+} as const;
