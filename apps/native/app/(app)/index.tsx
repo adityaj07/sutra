@@ -1,19 +1,23 @@
-import { Button } from "heroui-native";
-import { ScrollView, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
+
+import { Button } from "@/components/button";
+import { Text } from "@/components/text";
 
 export default function HomeScreen() {
   return (
     <ScrollView className="flex-1 bg-background pt-4">
       <View className="gap-6 p-6">
         <View className="gap-1">
-          <Text className="text-3xl font-bold text-foreground">Sūtra</Text>
+          <Text variant="heading1" className="text-foreground">
+            Sūtra
+          </Text>
           <Text className="text-muted">
             A visual demo of the app color tokens.
           </Text>
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-foreground">
+          <Text variant="heading3" className="text-foreground">
             Surfaces
           </Text>
           <View className="gap-3 rounded-2xl border border-border bg-surface p-4">
@@ -32,10 +36,12 @@ export default function HomeScreen() {
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-foreground">Brand</Text>
+          <Text variant="heading3" className="text-foreground">
+            Brand
+          </Text>
           <View className="gap-3">
             <View className="rounded-2xl bg-accent p-4">
-              <Text className="font-semibold text-accent-foreground">
+              <Text variant="bodyMedium" className="text-accent-foreground">
                 Accent / primary
               </Text>
             </View>
@@ -46,20 +52,22 @@ export default function HomeScreen() {
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-foreground">Status</Text>
+          <Text variant="heading3" className="text-foreground">
+            Status
+          </Text>
           <View className="flex-row flex-wrap gap-3">
             <View className="rounded-xl bg-success px-4 py-3">
-              <Text className="font-semibold text-success-foreground">
+              <Text variant="bodyMedium" className="text-success-foreground">
                 Success
               </Text>
             </View>
             <View className="rounded-xl bg-warning px-4 py-3">
-              <Text className="font-semibold text-warning-foreground">
+              <Text variant="bodyMedium" className="text-warning-foreground">
                 Warning
               </Text>
             </View>
             <View className="rounded-xl bg-danger px-4 py-3">
-              <Text className="font-semibold text-danger-foreground">
+              <Text variant="bodyMedium" className="text-danger-foreground">
                 Danger
               </Text>
             </View>
@@ -67,7 +75,7 @@ export default function HomeScreen() {
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-foreground">
+          <Text variant="heading3" className="text-foreground">
             Sūtra tokens
           </Text>
           <View className="gap-2 rounded-2xl border border-separator bg-surface p-4">
@@ -80,7 +88,26 @@ export default function HomeScreen() {
         </View>
 
         <View className="gap-3">
-          <Text className="text-lg font-semibold text-foreground">Buttons</Text>
+          <Text variant="heading3" className="text-foreground">
+            Typography
+          </Text>
+          <View className="gap-2 rounded-2xl border border-separator bg-surface p-4">
+            <Text variant="display">Display</Text>
+            <Text variant="heading2">Heading 2</Text>
+            <Text variant="title">Title</Text>
+            <Text variant="body">Body</Text>
+            <Text variant="bodySmall">Body small</Text>
+            <Text variant="caption">Caption</Text>
+            <Text variant="overline" className="uppercase">
+              Overline
+            </Text>
+          </View>
+        </View>
+
+        <View className="gap-3">
+          <Text variant="heading3" className="text-foreground">
+            Buttons
+          </Text>
           <Button variant="primary" onPress={() => console.log("Primary")}>
             Primary
           </Button>
